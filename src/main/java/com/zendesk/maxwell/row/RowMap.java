@@ -5,6 +5,7 @@ import com.zendesk.maxwell.producer.EncryptionMode;
 import com.zendesk.maxwell.replication.BinlogPosition;
 import com.zendesk.maxwell.producer.MaxwellOutputConfig;
 import com.zendesk.maxwell.replication.Position;
+import com.zendesk.maxwell.schema.columndef.ColumnDef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +40,7 @@ public class RowMap implements Serializable {
 	private Long threadId;
 
 	private final LinkedHashMap<String, Object> data;
+	private final LinkedHashMap<String, ColumnDef> dataColumnDef;
 	private final LinkedHashMap<String, Object> oldData;
 	private final List<String> pkColumns;
 
@@ -104,6 +106,7 @@ public class RowMap implements Serializable {
 		this.timestampMillis = timestampMillis;
 		this.timestampSeconds = timestampMillis / 1000;
 		this.data = new LinkedHashMap<>();
+		this.dataColumnDef = new LinkedHashMap<>();
 		this.oldData = new LinkedHashMap<>();
 		this.nextPosition = nextPosition;
 		this.pkColumns = pkColumns;
@@ -335,6 +338,9 @@ public class RowMap implements Serializable {
 	public Object getData(String key) {
 		return this.data.get(key);
 	}
+	public ColumnDef getDataColumnDef(String key) {
+		return this.dataColumnDef.get(key);
+	}
 
 
 	public long getApproximateSize() {
@@ -359,6 +365,11 @@ public class RowMap implements Serializable {
 		this.data.put(key, value);
 
 		this.approximateSize += approximateKVSize(key, value);
+	}
+
+	public void putData(String key, Object value, ColumnDef columnDef) {
+		putData(key, value);
+		this.dataColumnDef.put(key, columnDef);
 	}
 
 	public Object getOldData(String key) {

@@ -18,6 +18,10 @@ public class DDLMap extends RowMap {
 	private final String sql;
 	private Position nextPosition;
 
+	public String getSql() {
+		return sql;
+	}
+
 	public DDLMap(ResolvedSchemaChange change, Long timestamp, String sql, Position nextPosition) {
 		super("ddl", "database", "table", timestamp, new ArrayList<String>(0), nextPosition);
 		this.change = change;
