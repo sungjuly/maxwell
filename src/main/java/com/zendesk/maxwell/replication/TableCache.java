@@ -7,8 +7,11 @@ import com.zendesk.maxwell.MaxwellFilter;
 import com.zendesk.maxwell.schema.Database;
 import com.zendesk.maxwell.schema.Schema;
 import com.zendesk.maxwell.schema.Table;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TableCache {
+	static final Logger LOGGER = LoggerFactory.getLogger(TableCache.class);
 	private final HashMap<Long, Table> tableMapCache = new HashMap<>();
 	private final HashMap<Long, String> blacklistedTableCache = new HashMap<>();
 
@@ -21,12 +24,12 @@ public class TableCache {
 
 			Database db = schema.findDatabase(dbName);
 			if ( db == null )
-				throw new RuntimeException("Couldn't find database " + dbName);
+				LOGGER.warn("Couldn't find database " + dbName);
 			else {
 				Table tbl = db.findTable(tblName);
 
 				if (tbl == null)
-					throw new RuntimeException("Couldn't find table " + tblName + " in database " + dbName);
+					LOGGER.warn("Couldn't find table " + tblName + " in database " + dbName);
 				else
 					tableMapCache.put(tableId, tbl);
 			}
