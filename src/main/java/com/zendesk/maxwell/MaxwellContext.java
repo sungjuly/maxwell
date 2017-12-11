@@ -163,6 +163,7 @@ public class MaxwellContext {
 			this.replicationConnectionPool.release();
 			this.maxwellConnectionPool.release();
 			this.rawMaxwellConnectionPool.release();
+			this.metrics.shutdown();
 			complete.set(true);
 		} catch (Exception e) {
 			LOGGER.error("Exception occurred during shutdown:", e);

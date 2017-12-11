@@ -31,6 +31,10 @@ public class MaxwellMetrics implements Metrics {
 	private final MaxwellConfig config;
 	private String metricsPrefix;
 
+	private DatadogReporter datadogReporter;
+	private Slf4jReporter slf4jReporter;
+	private JmxReporter jmxReporter;
+
 	public MaxwellMetrics(MaxwellConfig config) {
 		this.config = config;
 		setup(config);
@@ -45,18 +49,18 @@ public class MaxwellMetrics implements Metrics {
 		metricsPrefix = config.metricsPrefix;
 
 		if (config.metricsReportingType.contains(reportingTypeSlf4j)) {
-			final Slf4jReporter reporter = Slf4jReporter.forRegistry(config.metricRegistry)
+			slf4jReporter = Slf4jReporter.forRegistry(config.metricRegistry)
 					.outputTo(LOGGER)
 					.convertRatesTo(TimeUnit.SECONDS)
 					.convertDurationsTo(TimeUnit.MILLISECONDS)
 					.build();
 
-			reporter.start(config.metricsSlf4jInterval, TimeUnit.SECONDS);
+			slf4jReporter.start(config.metricsSlf4jInterval, TimeUnit.SECONDS);
 			LOGGER.info("Slf4j metrics reporter enabled");
 		}
 
 		if (config.metricsReportingType.contains(reportingTypeJmx)) {
-			final JmxReporter jmxReporter = JmxReporter.forRegistry(config.metricRegistry)
+			jmxReporter = JmxReporter.forRegistry(config.metricRegistry)
 					.convertRatesTo(TimeUnit.SECONDS)
 					.convertDurationsTo(TimeUnit.MILLISECONDS)
 					.build();
@@ -89,13 +93,13 @@ public class MaxwellMetrics implements Metrics {
 						.build();
 			}
 
-			final DatadogReporter reporter = DatadogReporter.forRegistry(config.metricRegistry)
+			datadogReporter = DatadogReporter.forRegistry(config.metricRegistry)
 					.withTransport(transport)
 					.withExpansions(EnumSet.of(COUNT, RATE_1_MINUTE, RATE_15_MINUTE, MEDIAN, P95, P99))
 					.withTags(getDatadogTags(config.metricsDatadogTags))
 					.build();
 
-			reporter.start(config.metricsDatadogInterval, TimeUnit.SECONDS);
+			datadogReporter.start(config.metricsDatadogInterval, TimeUnit.SECONDS);
 			LOGGER.info("Datadog reporting enabled");
 		}
 	}
@@ -123,6 +127,18 @@ public class MaxwellMetrics implements Metrics {
 	@Override
 	public <T extends Metric> void register(String name, T metric) throws IllegalArgumentException {
 		getRegistry().register(name, metric);
+	}
+
+	public void shutdown() {
+		if(datadogReporter != null) {
+			datadogReporter.stop();
+		}
+		if(slf4jReporter != null) {
+			slf4jReporter.stop();
+		}
+		if(jmxReporter != null) {
+			jmxReporter.stop();
+		}
 	}
 
 	static class Registries {
